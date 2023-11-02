@@ -52,7 +52,7 @@ class CameraPosition_PT_Info(Panel):
         row.prop(cp_prop, "showPreview", text="Show Preview")
         row = layout.row(align=True)
         if cp_prop.showPreview:
-            num_cols = max(1,(context.region.width) // 32)
+            num_cols = max(1,(context.region.width) // 200)
             row.template_list("LayerItems", "abc", cp_prop, "layers", cp_prop,
                             "layers_index", sort_reverse=False, sort_lock=False, maxrows=1,columns=num_cols,type="GRID")
         else:
@@ -205,8 +205,7 @@ class LayerItems(UIList):
             # draw layer type
             box = layout.box()
             box.alignment = "CENTER"
-            box.prop(item, "name", icon="NONE", emboss=False, text="")
-            #box.scale_x = 9999
+            box.prop(item, "name", icon="NONE", emboss=False,text="")
             #box.prop(item, "name", icon="NONE", emboss=False, text="")
             draw_image_preview(box, item.preview)
         else:
