@@ -50,19 +50,40 @@ class AddTexture(Operator):
         layer.texturesEnum = img.name
         return {"FINISHED"}
 
-
-def getPLXmatLayer(context):
-    # fine for plx 4.0
+def getPLXmatProps(context):
     obj = context.active_object
     mat = obj.active_material
-    mat_props = mat.PlxProps
-    mat_layer = mat_props.layers[mat_props.layers_index]
-    return mat_layer
+    prop = getProp(context)
+    if hasattr(mat, 'PlxProps'):
+        # fine for plx 4.0
+        mat_props = mat.PlxProps
+        try:
+            prop.plxVersion = 4
+        except:
+            pass
+    elif hasattr(mat, 'PlxMatProps'):
+        mat_props = mat.PlxMatProps
+        try:
+            prop.plxVersion = 3
+        except:
+            pass
+    return mat_props
+
+def getPLXmatLayer(context):
+    mat_props = getPLXmatProps(context)
+    if getProp(context).plxVersion == 3:
+        return mat_props.Layers[mat_props.Layers_index]
+    return mat_props.layers[mat_props.layers_index]
 
 
 def getPLXActiveMatNodeGroup(context):
     mat_layer = getPLXmatLayer(context)
+    if getProp(context).plxVersion == 3:
+        return mat_layer
+    
     layer_node = mat_layer.id_data.node_tree.nodes.get(mat_layer.ID)
+    # for i in range
+    # return layer_node.node_tree
     return layer_node.node_tree
 
 
@@ -258,9 +279,15 @@ def projectMap(layer, img):
     GroupOutput.location = (locX, locY)
     if GroupOutput.inputs.get('Color'):
         links.new(Tex.outputs[0], GroupOutput.inputs['Color'])
-    else:
+    elif  GroupOutput.inputs.get('Base Color'):
         links.new(Tex.outputs[0], GroupOutput.inputs['Base Color'])
-    links.new(M5.outputs[0], GroupOutput.inputs['Alpha'])
+    elif GroupOutput.inputs.get('Base Color/Diffuse'):
+        links.new(Tex.outputs[0], GroupOutput.inputs['Base Color/Diffuse'])
+        
+    if GroupOutput.inputs.get('Alpha'):
+        links.new(M5.outputs[0], GroupOutput.inputs['Alpha'])
+    if GroupOutput.inputs.get('Fac'):
+        links.new(M5.outputs[0], GroupOutput.inputs['Fac'])
     if GroupOutput.inputs.get('Layer Mask'):
         links.new(M5.outputs[0], GroupOutput.inputs['Layer Mask'])
 
@@ -283,14 +310,23 @@ class CreateSmartMaterial(Operator):
         
         bpy.ops.plx.add_smart()
         matNodeGroup = getPLXActiveMatNodeGroup(context)
-        matNodeGroup.PlxProps.name = img.name
-        value_node = matNodeGroup.nodes.get('Value')
+        if getProp(context).plxVersion == 4:
+            matNodeGroup.PlxProps.name = img.name
+            value_node = matNodeGroup.nodes.get('Value')
+        else:
+            node_tree = matNodeGroup.id_data.node_tree
+            value_node = node_tree.nodes[f"{matNodeGroup.name}$.Value"]
+            frame_node = node_tree.nodes[f"{matNodeGroup.name}$.Frame"]
+            frame_node.label = img.name
+            
         group_name = value_node.node_tree.name
         
         area = bpy.context.area
         old_type = area.type
-
-        bpy.ops.plx.open_group(group_name=group_name)
+        if getProp(context).plxVersion == 4:
+            bpy.ops.plx.open_group(group_name=group_name)
+        else:
+            bpy.ops.plx.open_group(node_name=group_name)
         # in shader nodes editor
         projectMap(layer, img)
 
@@ -312,7 +348,10 @@ class CreateSurfaceLayer(Operator):
             # return bpy.ops.plx.add_surface.poll()
             try:
                 nodeGroup = getPLXActiveMatNodeGroup(context)
-                return nodeGroup.PlxProps.layer_type == 'CUSTOM'
+                if getProp(context).plxVersion == 4:
+                    return nodeGroup.PlxProps.layer_type == 'CUSTOM'
+                else:
+                    return nodeGroup.type == 'CUSTOM'
             except Exception as e:
                 print(e)
                 return False
@@ -321,34 +360,52 @@ class CreateSurfaceLayer(Operator):
     def execute(self, context):
         layer = getLayer(context)
         img = layer.textureSelected
-
+    
         bpy.ops.plx.add_surface()
+        
         mat_layer = getPLXmatLayer(context)
-        mat_props = mat_layer.id_data.PlxProps
-        matNodeGroup = getPLXActiveMatNodeGroup(context)
-        # print(mat_layer.ID)
-        channel_node_group = matNodeGroup.nodes.get(
-            mat_props.edit_maps).node_tree
-        channel_props = channel_node_group.PlxProps
-        channel_layers = channel_props.channel_layers
-        channel_layer = channel_layers[channel_props.channel_layers_index]
+        
+        if getProp(context).plxVersion == 3:
+            mat_props = getPLXmatProps(context)
+            edit_maps = mat_props.edit_maps
+            channel_name = "$.".join((edit_maps, mat_layer.name))
+            channel = mat_layer.channels[channel_name]
+            channel_layer = channel.Layers[channel.Layers_index]
+            
+            mat = channel_layer.id_data
+            nodes_name = '$.'.join(channel_layer.name.split('$.')[1:])
+            node_tree = mat.node_tree.nodes[nodes_name].node_tree
+            
+            item_nodes = node_tree.nodes
+            value_node = item_nodes[f"{channel_layer.name}$.Value"]
+            frame_node = item_nodes[f"{channel_layer.name}$.Frame"]
+            frame_node.label = img.name
+            
 
-        # print(channel_props.channel_layers_index,type(channel_layer))
-        layer_node = channel_layer.id_data.nodes.get(channel_layer.ID)
+        if getProp(context).plxVersion == 4:
+            mat_props = mat_layer.id_data.PlxProps
+            matNodeGroup = getPLXActiveMatNodeGroup(context)
 
-        surfaceNodeGroup = layer_node.node_tree
-        # print(surfaceNodeGroup.PlxProps.layer_type) # SURFACE
+            channel_node_group = matNodeGroup.nodes.get(mat_props.edit_maps).node_tree
+            channel_props = channel_node_group.PlxProps
+            channel_layers = channel_props.channel_layers
+            channel_layer = channel_layers[channel_props.channel_layers_index]
+            layer_node = channel_layer.id_data.nodes.get(channel_layer.ID)
 
-        # set surface layer name
-        surfaceNodeGroup.PlxProps.name = img.name
-        value_node = surfaceNodeGroup.nodes.get('Value')
+            surfaceNodeGroup = layer_node.node_tree
+            surfaceNodeGroup.PlxProps.name = img.name
+            value_node = surfaceNodeGroup.nodes.get('Value')
+            
         group_name = value_node.node_tree.name
         # print(value_node)
 
         area = bpy.context.area
         old_type = area.type
 
-        bpy.ops.plx.open_group(group_name=group_name)
+        if getProp(context).plxVersion == 4:
+            bpy.ops.plx.open_group(group_name=group_name)
+        else:
+            bpy.ops.plx.open_group(node_name=group_name)
         # in shader nodes editor
         projectMap(layer, img)
 

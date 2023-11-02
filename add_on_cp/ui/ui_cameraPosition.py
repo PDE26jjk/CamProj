@@ -156,7 +156,7 @@ class CameraPosition_PT_Info(Panel):
             row1 = col.row()
             row1.operator("pde.paste_texture", text="", icon="PASTEDOWN", emboss=False)
             
-            row1.template_ID(cp_prop,"texture_preview",new="image.new", open="image.open")
+            row1.template_ID(cp_prop,"texture_preview", open="image.open")
             row1.operator("pde.add_to_texture", text="",
                         icon="SORT_ASC", emboss=False)
             box.template_icon_view(layer, "texturesEnum", show_labels=True, scale_popup=4)
@@ -178,7 +178,7 @@ class CameraPosition_PT_Info(Panel):
             col = box.column()
             plxExist = isPHILOGIXexist()
             col.enabled = plxExist
-            col.label(text="Philogix :" if plxExist else "No philogix detected")
+            col.label(text=f"Philogix {cp_prop.plxVersion} :" if plxExist else "No philogix detected")
             if plxExist:
                 col.operator("pde.create_plx_smart_material", text="create smart material",icon="NODE_MATERIAL")
                 col.operator("pde.create_plx_surface_layer", text="create surface layer",icon="SURFACE_NSPHERE")

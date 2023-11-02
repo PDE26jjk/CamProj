@@ -100,11 +100,13 @@ class CameraPositionProp(PropertyGroup):
     tex_extended_settings: BoolProperty(name="Texture extend", default=True)
     texture_preview: PointerProperty(type=bpy.types.Image)
     
+    # plx
+    plxVersion :IntProperty(default=4)
     #debug
     debug_extended_settings: BoolProperty(
         name="Debug extend", default=False)
     offsetCopy : BoolProperty(name="Texture extend",
-                           description='blender 3.6.5 bug, copying to clipboard will offset by 3 pixel to right in some applications',
+                           description='some bug fixing ',
                            default=False)
     offsetAlignX: FloatProperty(name="Align offset  X",
                            description='fix align bias',
