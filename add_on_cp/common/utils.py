@@ -47,6 +47,7 @@ def copy2Clipboard(image):
     oriImage = area.spaces.active.image
     
     # 3.6.5中clipboard_copy有3个像素的偏移，需要偏移回去，其实还有左下角会变黑，不知道咋改
+    # 后来我发现还有很多bug，还是凑合着用，等官方更新吧
     if getProp(bpy.context).offsetCopy:
         offset = 3
         tempImage = image.copy()
