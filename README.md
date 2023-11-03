@@ -7,6 +7,9 @@ This add-on needs to be in Blender 3.6.5 or later to work properly. Because copy
 
 此插件需要在Blender 3.6.5或更高版本中才能正常工作，因为复制图片到剪贴板功能仅在 3.6 之后才有。
 
+### 使用视频
+https://www.bilibili.com/video/BV1Ra4y1X7J4
+
 ## 使用方式：
 
 将add_on_cp文件夹压缩成zip文件，然后在Blender里点preferences->Add-ons->install，选则zip文件即可。
