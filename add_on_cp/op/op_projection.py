@@ -2,6 +2,7 @@ import bpy
 
 from bpy.types import Operator
 
+from ..common.console import console_print
 from ..common.utils import isPHILOGIXexist, make_images_label, pasteClipboard
 
 from .op_cameraPosition import getLayer, getProp, selectingLayer
@@ -15,7 +16,7 @@ class PasteTexture(Operator):
 
     @classmethod
     def poll(cls, context):
-        return selectingLayer(context) and bpy.ops.image.clipboard_paste.poll()
+        return selectingLayer(context)
 
     def execute(self, context):
         layer = getLayer(context)
@@ -511,6 +512,14 @@ def getProjectionTexture():
     return tex
 
 
+def getProjectionBrush():
+    name = "CamProj Projection Brush"
+    if not bpy.data.brushes.get(name):
+        bpy.data.brushes.new(name, mode='TEXTURE_PAINT').asset_mark()
+    brush = bpy.data.brushes[name]
+    return brush
+
+
 class ApplyTexture(Operator):
     bl_idname = "pde.apply_texture"
     bl_label = "Apply Texture"
@@ -525,9 +534,14 @@ class ApplyTexture(Operator):
         texture = getProjectionTexture()
         texture.image = getLayer(context).textureSelected
 
-        brush = bpy.context.tool_settings.image_paint.brush
+        # brush = bpy.context.tool_settings.image_paint.brush
+        brush = getProjectionBrush()
+        context.tool_settings.image_paint.brush = brush
+
         brush.texture_slot.map_mode = "STENCIL"
+        # console_print('before', brush.texture)
         brush.texture = texture
+        # console_print('after', brush.texture)
         bpy.ops.object.mode_set(mode='TEXTURE_PAINT', toggle=False)
         # alignStencil()
         return {"FINISHED"}

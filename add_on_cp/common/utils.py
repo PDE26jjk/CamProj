@@ -77,12 +77,14 @@ def pasteClipboard():
     if old_type != 'IMAGE_EDITOR':
         area.type = 'IMAGE_EDITOR'
     oriImage = area.spaces.active.image
+    image = None
+    try:
+        bpy.ops.image.clipboard_paste()
+        image = area.spaces.active.image
+    finally:
+        area.spaces.active.image = oriImage
+        area.type = old_type
 
-    bpy.ops.image.clipboard_paste()
-    image = area.spaces.active.image
-
-    area.spaces.active.image = oriImage
-    area.type = old_type
     return image
 
 

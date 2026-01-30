@@ -12,8 +12,8 @@ def loadLayerCamera(layer, context):
         area for area in bpy.context.screen.areas if area.type == 'VIEW_3D')
     if area.spaces[0].region_3d.view_perspective != 'CAMERA':
         bpy.ops.view3d.view_camera()
-        #bpy.ops.view3d.view_center_camera()
-    #area.spaces[0].region_3d.view_perspective = 'CAMERA'
+        # bpy.ops.view3d.view_center_camera()
+    # area.spaces[0].region_3d.view_perspective = 'CAMERA'
 
 
 def loadLayer(layer, context):
@@ -58,8 +58,10 @@ def saveLayer(layer, context):
     layer.AspectX = render.pixel_aspect_x
     layer.AspectY = render.pixel_aspect_y
 
+
 def getProp(context):
     return context.scene.cp_prop
+
 
 def selectingLayer(context):
     prop = getProp(context)
@@ -131,7 +133,7 @@ class RemoveLayer(Operator):
         layers.remove(idx)
 
         if idx == len(layers):
-            prop.layers_index = len(layers)-1
+            prop.layers_index = len(layers) - 1
         return {"FINISHED"}
 
 
@@ -154,8 +156,9 @@ class AddLayer(Operator):
         saveLayer(layer, context)
         # layer.preview = bpy.data.images['qqq.png']
         # context.view_layer.update()
-        cp_prop.layers_index = len(cp_prop.layers)-1
+        cp_prop.layers_index = len(cp_prop.layers) - 1
         return {"FINISHED"}
+
 
 class SetPreview(Operator):
     bl_idname = "pde.set_render_result_as_preview"
@@ -172,6 +175,7 @@ class SetPreview(Operator):
         layer.preview = layer.renderResultSelected
         return {"FINISHED"}
 
+
 class RemoveRenderResult(Operator):
     bl_idname = "pde.remove_render_result"
     bl_label = "Remove Render Result"
@@ -185,19 +189,19 @@ class RemoveRenderResult(Operator):
     def execute(self, context):
         layer = getLayer(context)
         image = layer.renderResultSelected
-        
+
         for i in range(len(layer.renderResults)):
             if layer.renderResults[i].image == image:
                 layer.renderResults.remove(i)
                 break
         bpy.data.images.remove(image)
         if i > 0:
-            layer.renderResultSelected = layer.renderResults[i-1].image
-        elif i==0 and len(layer.renderResults)>0:
+            layer.renderResultSelected = layer.renderResults[i - 1].image
+        elif i == 0 and len(layer.renderResults) > 0:
             layer.renderResultSelected = layer.renderResults[0].image
         else:
             layer.renderResultSelected = None
         if layer.renderResultSelected:
             layer.renderResultsEnum = layer.renderResultSelected.name
-        #layer.preview = layer.renderResultSelected
+        # layer.preview = layer.renderResultSelected
         return {"FINISHED"}
