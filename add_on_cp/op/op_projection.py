@@ -50,6 +50,7 @@ class AddTexture(Operator):
         layer.texturesEnum = img.name
         return {"FINISHED"}
 
+
 def getPLXmatProps(context):
     obj = context.active_object
     mat = obj.active_material
@@ -69,6 +70,7 @@ def getPLXmatProps(context):
             pass
     return mat_props
 
+
 def getPLXmatLayer(context):
     mat_props = getPLXmatProps(context)
     if getProp(context).plxVersion == 3:
@@ -80,7 +82,7 @@ def getPLXActiveMatNodeGroup(context):
     mat_layer = getPLXmatLayer(context)
     if getProp(context).plxVersion == 3:
         return mat_layer
-    
+
     layer_node = mat_layer.id_data.node_tree.nodes.get(mat_layer.ID)
     # for i in range
     # return layer_node.node_tree
@@ -106,12 +108,12 @@ def projectMap(layer, img):
     # matrix_world = matrix_world.transpose()
     projection_mat = camera.calc_matrix_camera(
         bpy.context.evaluated_depsgraph_get(),
-        x=int(layer.ResolutionX*(layer.ResolutionPercentage/100)),
-        y=int(layer.ResolutionY*(layer.ResolutionPercentage/100)),
+        x=int(layer.ResolutionX * (layer.ResolutionPercentage / 100)),
+        y=int(layer.ResolutionY * (layer.ResolutionPercentage / 100)),
         scale_x=layer.AspectX,
         scale_y=layer.AspectY
     )
-    pv = projection_mat @  matrix_world
+    pv = projection_mat @ matrix_world
 
     nodeGroup = bpy.context.space_data.edit_tree
     tree = nodeGroup
@@ -138,7 +140,7 @@ def projectMap(layer, img):
     locX, locY = 0, 0
 
     GroupInput = tree.nodes.new("NodeGroupInput")
-    GroupInput.location = (locX, locY-300)
+    GroupInput.location = (locX, locY - 300)
     f1 = GroupInput.outputs[f1.name]
     f2 = GroupInput.outputs[f2.name]
 
@@ -279,11 +281,11 @@ def projectMap(layer, img):
     GroupOutput.location = (locX, locY)
     if GroupOutput.inputs.get('Color'):
         links.new(Tex.outputs[0], GroupOutput.inputs['Color'])
-    elif  GroupOutput.inputs.get('Base Color'):
+    elif GroupOutput.inputs.get('Base Color'):
         links.new(Tex.outputs[0], GroupOutput.inputs['Base Color'])
     elif GroupOutput.inputs.get('Base Color/Diffuse'):
         links.new(Tex.outputs[0], GroupOutput.inputs['Base Color/Diffuse'])
-        
+
     if GroupOutput.inputs.get('Alpha'):
         links.new(M5.outputs[0], GroupOutput.inputs['Alpha'])
     if GroupOutput.inputs.get('Fac'):
@@ -307,7 +309,7 @@ class CreateSmartMaterial(Operator):
     def execute(self, context):
         layer = getLayer(context)
         img = layer.textureSelected
-        
+
         bpy.ops.plx.add_smart()
         matNodeGroup = getPLXActiveMatNodeGroup(context)
         if getProp(context).plxVersion == 4:
@@ -318,9 +320,9 @@ class CreateSmartMaterial(Operator):
             value_node = node_tree.nodes[f"{matNodeGroup.name}$.Value"]
             frame_node = node_tree.nodes[f"{matNodeGroup.name}$.Frame"]
             frame_node.label = img.name
-            
+
         group_name = value_node.node_tree.name
-        
+
         area = bpy.context.area
         old_type = area.type
         if getProp(context).plxVersion == 4:
@@ -360,27 +362,26 @@ class CreateSurfaceLayer(Operator):
     def execute(self, context):
         layer = getLayer(context)
         img = layer.textureSelected
-    
+
         bpy.ops.plx.add_surface()
-        
+
         mat_layer = getPLXmatLayer(context)
-        
+
         if getProp(context).plxVersion == 3:
             mat_props = getPLXmatProps(context)
             edit_maps = mat_props.edit_maps
             channel_name = "$.".join((edit_maps, mat_layer.name))
             channel = mat_layer.channels[channel_name]
             channel_layer = channel.Layers[channel.Layers_index]
-            
+
             mat = channel_layer.id_data
             nodes_name = '$.'.join(channel_layer.name.split('$.')[1:])
             node_tree = mat.node_tree.nodes[nodes_name].node_tree
-            
+
             item_nodes = node_tree.nodes
             value_node = item_nodes[f"{channel_layer.name}$.Value"]
             frame_node = item_nodes[f"{channel_layer.name}$.Frame"]
             frame_node.label = img.name
-            
 
         if getProp(context).plxVersion == 4:
             mat_props = mat_layer.id_data.PlxProps
@@ -395,7 +396,7 @@ class CreateSurfaceLayer(Operator):
             surfaceNodeGroup = layer_node.node_tree
             surfaceNodeGroup.PlxProps.name = img.name
             value_node = surfaceNodeGroup.nodes.get('Value')
-            
+
         group_name = value_node.node_tree.name
         # print(value_node)
 
@@ -412,6 +413,7 @@ class CreateSurfaceLayer(Operator):
         area.type = old_type
         return {"FINISHED"}
 
+
 class RemoveTexture(Operator):
     bl_idname = "pde.remove_texture"
     bl_label = "Remove Texture"
@@ -425,15 +427,15 @@ class RemoveTexture(Operator):
     def execute(self, context):
         layer = getLayer(context)
         image = layer.textureSelected
-        
+
         for i in range(len(layer.textureSet)):
             if layer.textureSet[i].image == image:
                 layer.textureSet.remove(i)
                 break
         # bpy.data.images.remove(image)
         if i > 0:
-            layer.textureSelected = layer.textureSet[i-1].image
-        elif i==0 and len(layer.textureSet)>0:
+            layer.textureSelected = layer.textureSet[i - 1].image
+        elif i == 0 and len(layer.textureSet) > 0:
             layer.textureSelected = layer.textureSet[0].image
         else:
             layer.textureSelected = None
@@ -441,7 +443,8 @@ class RemoveTexture(Operator):
             layer.texturesEnum = layer.textureSelected.name
 
         return {"FINISHED"}
-    
+
+
 def view3d_find():
     area = next(area for area in bpy.context.screen.areas if area.type == 'VIEW_3D')
     if not area:
@@ -451,8 +454,8 @@ def view3d_find():
     for region in area.regions:
         if region.type == 'WINDOW':
             return region, rv3d
-        
-        
+
+
 def alignStencil():
     # https://blender.stackexchange.com/questions/6377/coordinates-of-corners-of-camera-view-border
     def view3d_camera_border(scene):
@@ -477,13 +480,14 @@ def alignStencil():
     prop = getProp(bpy.context)
     position.x += prop.offsetAlignX
     position.y += prop.offsetAlignY
-    
+
     bpy.ops.brush.stencil_reset_transform()
     brush = bpy.context.tool_settings.image_paint.brush
     brush.stencil_pos = position
     brush.stencil_dimension = dimension
-    
-class AlignStencil (Operator):
+
+
+class AlignStencil(Operator):
     bl_idname = "pde.align_stencil"
     bl_label = "align stencil"
     bl_description = "Align texture stencil to camera frame, \nneed to in camera view and have texture stencil"
@@ -498,14 +502,16 @@ class AlignStencil (Operator):
         alignStencil()
         return {"FINISHED"}
 
+
 def getProjectionTexture():
     name = "CamProj Projection Texture"
     if not bpy.data.textures.get(name):
         bpy.data.textures.new(name, 'IMAGE')
     tex = bpy.data.textures[name]
     return tex
-    
-class ApplyTexture (Operator):
+
+
+class ApplyTexture(Operator):
     bl_idname = "pde.apply_texture"
     bl_label = "Apply Texture"
     bl_description = "Apply image as texture to brush,\n create texture if not exist"
@@ -514,11 +520,11 @@ class ApplyTexture (Operator):
     @classmethod
     def poll(cls, context):
         return bpy.ops.object.mode_set.poll() and selectingLayer(context) and getLayer(context).textureSelected
-    
+
     def execute(self, context):
         texture = getProjectionTexture()
         texture.image = getLayer(context).textureSelected
-        
+
         brush = bpy.context.tool_settings.image_paint.brush
         brush.texture_slot.map_mode = "STENCIL"
         brush.texture = texture

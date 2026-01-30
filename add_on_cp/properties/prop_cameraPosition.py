@@ -1,5 +1,6 @@
 import bpy
-from bpy.props import BoolProperty, IntProperty, StringProperty, CollectionProperty, FloatProperty, EnumProperty, PointerProperty
+from bpy.props import BoolProperty, IntProperty, StringProperty, CollectionProperty, FloatProperty, EnumProperty, \
+    PointerProperty
 from bpy.types import PropertyGroup
 
 from .prop_update import get_cp_name, layers_index_update, set_cp_name
@@ -72,10 +73,10 @@ class CameraPositionType(PropertyGroup):
     renderResultSelected: PointerProperty(type=bpy.types.Image)
 
     texturesEnum: EnumProperty(name='texture_results',
-                                     description='List of textures',
-                                     items=getTextureItems,
-                                     update=texturesItemsUpdate
-                                     )
+                               description='List of textures',
+                               items=getTextureItems,
+                               update=texturesItemsUpdate
+                               )
     textureSelected: PointerProperty(type=bpy.types.Image)
     textureSet: CollectionProperty(type=ImageType)
 
@@ -87,7 +88,7 @@ class CameraPositionType(PropertyGroup):
 
 
 class CameraPositionProp(PropertyGroup):
-    autoLoad: BoolProperty(name="Auto Load",description='Auto load layer when Selecting', default=False)
+    autoLoad: BoolProperty(name="Auto Load", description='Auto load layer when Selecting', default=False)
     showPreview: BoolProperty(name="Show Preview", default=False)
     layers: CollectionProperty(type=CameraPositionType)
     layers_index: IntProperty(
@@ -99,19 +100,18 @@ class CameraPositionProp(PropertyGroup):
         name="Depth normal extend", default=True)
     tex_extended_settings: BoolProperty(name="Texture extend", default=True)
     texture_preview: PointerProperty(type=bpy.types.Image)
-    
+
     # plx
-    plxVersion :IntProperty(default=4)
-    #debug
+    plxVersion: IntProperty(default=4)
+    # debug
     debug_extended_settings: BoolProperty(
         name="Debug extend", default=False)
-    offsetCopy : BoolProperty(name="Texture extend",
-                           description='some bug fixing ',
-                           default=False)
+    offsetCopy: BoolProperty(name="Texture extend",
+                             description='some bug fixing ',
+                             default=False)
     offsetAlignX: FloatProperty(name="Align offset  X",
-                           description='fix align bias',
-                           default=-1)
+                                description='fix align bias',
+                                default=-1)
     offsetAlignY: FloatProperty(name="Align offset  Y",
-                           description='fix align bias',
-                           default=-1)
-
+                                description='fix align bias',
+                                default=-1)

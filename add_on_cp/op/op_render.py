@@ -3,7 +3,7 @@ import bpy
 from bpy.types import Operator
 
 from ..common.utils import copy2Clipboard, make_images_label
-from bpy.props import PointerProperty,StringProperty
+from bpy.props import PointerProperty, StringProperty
 from .op_cameraPosition import getLayer, selectingLayer
 
 import numpy as np
@@ -15,7 +15,6 @@ def renderMaterial(imageName, context):
     scene.use_nodes = True
     tree = context.scene.node_tree
     links = tree.links
-    
 
     render_layers_node = tree.nodes.new(type="CompositorNodeRLayers")
     render_layers_node.location = 0, 0
@@ -23,11 +22,11 @@ def renderMaterial(imageName, context):
     # Create a node for outputting the surface normals of each pixel
     loc_x = 400
     loc_y = 0
-    
+
     gamma_node = tree.nodes.new('CompositorNodeGamma')
     gamma_node.location = (loc_x, loc_y)
     gamma_node.inputs[1].default_value = 0.45454
-    
+
     loc_x += 200
     loc_y -= 100
     vl = tree.nodes.new('CompositorNodeViewer')
@@ -63,7 +62,7 @@ def renderDepth(imageName, context):
     scene.use_nodes = True
     tree = context.scene.node_tree
     links = tree.links
-    
+
     # Configure renderer to record depth
     scene.view_layers["ViewLayer"].use_pass_z = True
 
@@ -75,7 +74,7 @@ def renderDepth(imageName, context):
 
     normalize_node = tree.nodes.new("CompositorNodeNormalize")
     normalize_node.location = (loc_x, loc_y)
-    
+
     loc_x += 200
     oneMinus = tree.nodes.new('CompositorNodeMath')
     oneMinus.operation = "SUBTRACT"
@@ -85,12 +84,12 @@ def renderDepth(imageName, context):
     loc_x += 200
     vl = tree.nodes.new('CompositorNodeViewer')
     vl.location = (loc_x, loc_y)
-    
+
     links.new(render_layers_node.outputs['Depth'], normalize_node.inputs[0])
     links.new(normalize_node.outputs[0], oneMinus.inputs[1])
     links.new(oneMinus.outputs[0], vl.inputs[0])
     links.new(render_layers_node.outputs['Alpha'], vl.inputs['Alpha'])
-    
+
     tree.nodes.active = vl
     bpy.ops.render.render()
     vnImage = bpy.data.images['Viewer Node']
@@ -153,7 +152,7 @@ def renderNormal(imageName, context):
     arr = arr @ w2vmat
     mask = np.all(arr == 0, axis=1)
     arr[mask] = np.array([0, 0, 1])
-    arr = arr * 0.5+0.5
+    arr = arr * 0.5 + 0.5
     # RGB+A
     arr = np.concatenate((arr, np.expand_dims(
         np.ones(arr.shape[0]), axis=1)), axis=1)
@@ -180,16 +179,19 @@ class RenderImage(Operator):
 
     def execute(self, context):
         layer = getLayer(context)
-        
-        name = make_images_label(layer.renderResults, layer.name+" render")
-        image = renderMaterial(name,context)
+
+        name = make_images_label(layer.renderResults, layer.name + " render")
+        image = renderMaterial(name, context)
         rr = layer.renderResults.add()
         rr.image = image
         layer.renderResultsEnum = rr.image.name
         return {"FINISHED"}
 
+
 # https://blenderartists.org/t/live-scene-capture-to-texture/1380153
 import gpu
+
+
 class RenderViewport(Operator):
     bl_idname = "pde.render_viewport"
     bl_label = "Render viewport"
@@ -202,29 +204,31 @@ class RenderViewport(Operator):
 
     def execute(self, context):
         layer = getLayer(context)
-        x=int(layer.ResolutionX*(layer.ResolutionPercentage/100))
-        y=int(layer.ResolutionY*(layer.ResolutionPercentage/100))
+        x = int(layer.ResolutionX * (layer.ResolutionPercentage / 100))
+        y = int(layer.ResolutionY * (layer.ResolutionPercentage / 100))
         cam = bpy.data.objects[layer.name]
-        offscreen = gpu.types.GPUOffScreen( x, y )
-        vm = cam.matrix_world.inverted( )
-        pm = cam.calc_matrix_camera( context.evaluated_depsgraph_get( ), x = x, y = y )
-        offscreen.draw_view3d( context.scene, context.view_layer, context.space_data, context.region, vm, pm,do_color_management=True,draw_background=True)
-        gpu.state.depth_mask_set( False )
-        buffer = np.array( offscreen.texture_color.read(), dtype = 'float32' ).flatten( order = 'F' )
-        buffer = np.divide( buffer, 255 ) 
+        offscreen = gpu.types.GPUOffScreen(x, y)
+        vm = cam.matrix_world.inverted()
+        pm = cam.calc_matrix_camera(context.evaluated_depsgraph_get(), x=x, y=y)
+        offscreen.draw_view3d(context.scene, context.view_layer, context.space_data, context.region, vm, pm,
+                              do_color_management=True, draw_background=True)
+        gpu.state.depth_mask_set(False)
+        buffer = np.array(offscreen.texture_color.read(), dtype='float32').flatten(order='F')
+        buffer = np.divide(buffer, 255)
         # gamma
         # buffer = buffer**0.4545
-        
-        name = make_images_label(layer.renderResults, layer.name+" render")
+
+        name = make_images_label(layer.renderResults, layer.name + " render")
         image = bpy.data.images.new(
             name, width=x, height=y)
-        image.pixels.foreach_set( buffer )
+        image.pixels.foreach_set(buffer)
         image.pack()
         rr = layer.renderResults.add()
         rr.image = image
         layer.renderResultsEnum = rr.image.name
         return {"FINISHED"}
-    
+
+
 class RenderDepth(Operator):
     bl_idname = "pde.render_depth"
     bl_label = "Render Image"
@@ -269,14 +273,15 @@ class RenderNormal(Operator):
 
         return {"FINISHED"}
 
+
 class ToggleRenderView(Operator):
     bl_idname = "pde.toggle_render_view"
     bl_label = "Toggle Render View"
     bl_description = "toggle render view with selected image"
     bl_options = {'UNDO'}
-    
+
     imageName: bpy.props.StringProperty()
-    
+
     def execute(self, context):
         if bpy.data.images.get(self.imageName):
             image = bpy.data.images[self.imageName]
@@ -285,10 +290,11 @@ class ToggleRenderView(Operator):
             print(bpy.context.area)
             area = bpy.context.area
             if bpy.context.window.screen.name != "temp":
-            # bpy.context.scene.view_layers.update()
+                # bpy.context.scene.view_layers.update()
                 area = bpy.data.screens['temp'].areas[0]
             area.spaces.active.image = image
         return {"FINISHED"}
+
 
 class CopyRenderResult(Operator):
     bl_idname = "pde.copy_render_result"

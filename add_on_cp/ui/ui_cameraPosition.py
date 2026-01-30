@@ -20,7 +20,6 @@ def draw_image_preview(layout, image):
     
     
 class CameraPosition_PT_Info(Panel):
-    # bl_idname = "p1" #
     bl_label = "CamProj"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
