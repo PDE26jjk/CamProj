@@ -536,7 +536,9 @@ class ApplyTexture(Operator):
 
         # brush = bpy.context.tool_settings.image_paint.brush
         brush = getProjectionBrush()
-        context.tool_settings.image_paint.brush = brush
+        # context.tool_settings.image_paint.brush = brush
+        bpy.ops.brush.asset_activate(asset_library_type='LOCAL', asset_library_identifier='',
+                                     relative_asset_identifier=f"Brush\\{brush.name}")
 
         brush.texture_slot.map_mode = "STENCIL"
         # console_print('before', brush.texture)
